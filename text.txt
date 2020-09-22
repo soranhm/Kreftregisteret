@@ -1,0 +1,84 @@
+- List all users
+http://localhost:8080/api/v1/users
+curl -X GET http://localhost:8080/api/v1/users
+[{"id":1,"name":"Alice","version":1},{"id":2,"name":"Bob","version":2},{"id":3,"name":"Eve","version":1}]
+
+- List all users with at least one valid user role at a given unit at a given time
+http://localhost:8080/api/v1/users/?unitid={unitid}&date={date} ( date=2019-03-04T00:00:00 )
+curl -X GET "http://localhost:8080/api/v1/users/?date=2019-03-04T00:00:00&unitid=12"
+[{"id":2,"name":"Bob","version":2},{"id":2,"name":"Bob","version":2}]
+
+- List all units
+http://localhost:8080/api/v1/units
+curl -X GET http://localhost:8080/api/v1/units
+[{"id":11,"name":"Kreftregisteret","version":2},{"id":12,"name":"Akershus universitetssykehus HF","version":1},{"id":13,"name":"Sørlandet sykehus HF","version":2},{"id":14,"name":"Vestre Viken HF","version":2}]
+
+- List all roles
+http://localhost:8080/api/v1/roles
+curl -X GET http://localhost:8080/api/v1/roles
+[{"id":101,"name":"User administration","version":1},{"id":102,"name":"Endoscopist administration","version":2},{"id":103,"name":"Report colonoscopy capacity","version":1},{"id":104,"name":"Send invitations","version":2},{"id":105,"name":"View statistics","version":2}]
+
+- List all user roles (both currently valid and invalid) for a given user id and unit id
+http://localhost:8080/api/v1/userroles/?userid={userid}&unitid={unitid}
+curl -X GET "http://localhost:8080/api/v1/userroles/?userid=1&unitid=11"
+[{"id":1001,"version":1,"userId":1,"unitId":11,"roleId":101,"validFrom":"2019-01-02 00:00:00","validTo":"2019-12-13 23:59:59"},{"id":1002,"version":2,"userId":1,"unitId":11,"roleId":104,"validFrom":"2019-01-02 00:00:00","validTo":"2019-12-13 23:59:59"},{"id":1003,"version":1,"userId":1,"unitId":11,"roleId":105,"validFrom":"2019-06-11 00:00:00","validTo":null},{"id":1008,"version":1,"userId":1,"unitId":11,"roleId":101,"validFrom":"2019-02-01 07:00:00","validTo":null},{"id":1009,"version":1,"userId":1,"unitId":11,"roleId":104,"validFrom":"2019-02-01 07:00:00","validTo":null}]
+
+- List only valid user roles for a given user id and unit id at a given timestamp
+http://localhost:8080/api/v1/userroles/?userid=2&unitid={unitid}&date={date} (2019-01-28 00:00:00)
+
+curl -X GET "http://localhost:8080/api/v1/userroles/?userid=2&unitid=12&date=2019-03-04T00:00:00"
+[{"id":1004,"version":2,"userId":2,"unitId":12,"roleId":101,"validFrom":"2019-01-28 00:00:00","validTo":null},{"id":1005,"version":1,"userId":2,"unitId":12,"roleId":105,"validFrom":"2019-01-28 00:00:00","validTo":null}]
+
+- Create a new user
+POST http://localhost:8080/api/v1/users {"name": "Soran","version": 1}
+curl -d '{"name":"Soran", "version":1}' -H "Content-Type: application/json" -X POST http://localhost:8080/api/v1/users
+{"id":4,"name":"Soran","version":1}Sorans-MacBook-Pro:fun soran$
+
+- Update an existing user
+PUT http://localhost:8080/api/v1/users/{id} {"name": "Soran","version": 2}
+curl -d '{"name":"Soran2", "version":2}' -H "Content-Type: application/json" -X PUT http://localhost:8080/api/v1/users/4
+{"id":4,"name":"Soran2","version":2}Sorans-MacBook-Pro:fun soran$
+
+- Delete an existing user. A user can only be deleted if there are no user roles for that user.
+DELETE http://localhost:8080/api/v1/users/{id}
+curl -X DELETE http://localhost:8080/api/v1/users/3 (Nothing happens)
+curl -X DELETE http://localhost:8080/api/v1/users/2 (user with id = 2 deleted)
+
+- Create a new user role for a given user id, unit id, role id, an optional valid from timestamp (if not specified, default to the current date and time)
+    and an optional valid to timestamp (if not specified, default to no timestamp). If a valid to timestamp is specified, it must be after the valid from
+    timestamp (or the current date and time if valid from timestamp is not specified in the request). At most one user role for a given combination of
+    user id, unit id and role id can be valid at any point in time.
+POST http://localhost:8080/api/v1/userroles 
+{
+    "version": 1,
+    "userId":1,
+    "unitId":11,
+    "roleId":101
+    ("validFrom": "2020-09-21 23:01:18",
+    "validTo": null) 
+} 
+curl -X POST http://localhost:8080/api/v1/userroles -d '{"version": 1,"userId":2,"unitId":13,"roleID":110}' -H "Content-Type: application/json"
+{"id":1010,"version":1,"userId":2,"unitId":13,"roleId":0,"validFrom":"2020-09-22 11:32:19","validTo":null}
+
+- Update an existing user role. Only the valid from and valid to timestamps can be changed. The valid from timestamp, if specified, must be a
+    timestamp (a user role must always have a valid from timestamp). The requirement that the valid to timestamp, if specified, must come after the
+    valid from timestamp must be enforced, and an update that would cause two user roles for the same user id, unit id and role id to be valid at the
+    same time must be rejected.
+PUT http://localhost:8080/api/v1/userroles/{userRoleId}
+
+{
+    "validFrom": "2020-01-28 00:00:00",
+    "validTo": "2029-01-28 00:00:00"
+} 
+curl -d '{"validFrom":"2020-01-28 00:00:00", "validTo":"2023-01-28 00:00:00"}' -H "Content-Type: application/json" -X PUT http://localhost:8080/api/v1/userroles/1005
+{"id":1005,"version":1,"userId":2,"unitId":12,"roleId":105,"validFrom":"2020-01-28 00:00:00","validTo":"2023-01-28 00:00:00"}
+
+- Delete an existing user role.
+DELETE http://localhost:8080/api/v1/userroles/{userRoleid}
+curl -X DELETE http://localhost:8080/api/v1/userroles/1005
+
+- For a given unit id, list all users with at least one user role at that unit (whether the user role is currently valid or not), and for each user, list all of
+    the user's user roles at the given unit id. If application/xml is specified in the Accept header of the request, the message body of the response
+    should be valid XML. If application/json is specified in the Accept header of the request, the message body of the response should be as JSON.
+
+curl -H "Accept: application/xml" http://localhost:8080/api/v1/userroles
