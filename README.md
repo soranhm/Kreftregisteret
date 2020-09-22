@@ -272,3 +272,11 @@ GET http://localhost:8080/api/v1/userroles/{userRoleid}
 > curl -H "Accept: application/json" http://localhost:8080/api/v1/userroles
 > ...
 ```
+
+# TILLEGG
+
+- Kan lage en bash script som kjører alle curl for testing.
+- Skrive en test klasse.
+- Bruk `@OneToMany()` og `@ManyToOne` for tilkobling mellom tabeller.
+- innføre Mysql eller Microsoft SQL Server.
+- ...
