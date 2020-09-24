@@ -2,12 +2,15 @@ package com.test.api.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
+import com.test.api.exception.ResourceNotFoundException;
 import com.test.api.model.User;
 import com.test.api.repository.UserRepository;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,13 +49,21 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    User newUser(@RequestBody User newUser) {
-        return userRepository.save(newUser);
+    public ResponseEntity<User> newUser(@RequestBody User newUser) {
+        if (newUser.getName() == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        } else {
+            return new ResponseEntity<>(userRepository.save(newUser), HttpStatus.OK);
+
+        }
     }
 
-    @GetMapping("/users/{id}")
-    public Optional<User> getUser(@PathVariable("id") final Long id) {
-        return userRepository.findById(id);
+    @GetMapping(path = "/users/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<User> getUserById(@PathVariable("id") long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Not found User with id = " + id));
+        return new ResponseEntity<User>(user, HttpStatus.OK);
     }
 
     @GetMapping("/users/")
