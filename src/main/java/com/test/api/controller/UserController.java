@@ -2,6 +2,7 @@ package com.test.api.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import com.test.api.exception.ResourceNotFoundException;
 import com.test.api.model.User;
@@ -36,17 +37,21 @@ public class UserController {
         return userRepository.findAll();
     }
 
-    @PutMapping("/users/{id}")
-    User replaceUser(@RequestBody User newUser, @PathVariable Long id) {
-        return userRepository.findById(id).map(user -> {
-            user.setName(newUser.getName());
-            user.setVersion(newUser.getVersion());
-            return userRepository.save(user);
-        }).orElseGet(() -> {
-            newUser.setId(id);
-            return userRepository.save(newUser);
-        });
-    }
+    
+    @PutMapping("/users/{id}") 
+    User replaceUser(@RequestBody User newUser, @PathVariable Long id) { 
+        return userRepository.findById(id).map(user-> {
+            if(user.getVersion() != newUser.getVersion()){
+                user.setName(user.getName());
+                user.setVersion(user.getVersion());
+                return userRepository.save(user); 
+            }else{
+                user.setName(newUser.getName()); 
+                user.setVersion(newUser.getVersion()+1);
+                return userRepository.save(user); 
+            }}).orElseGet(() -> { newUser.setId(id); 
+            return userRepository.save(newUser); }); 
+        }
 
     @PostMapping("/users")
     public ResponseEntity<User> newUser(@RequestBody User newUser) {

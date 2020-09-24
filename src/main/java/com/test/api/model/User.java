@@ -23,7 +23,7 @@ public class User {
     private String name;
 
     @Column(name = "version")
-    private int version;
+    private int version = 1;
 
     User() {
     }

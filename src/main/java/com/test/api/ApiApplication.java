@@ -22,9 +22,9 @@ public class ApiApplication {
 			final RoleRepository roleRepository, final UserRoleRepository userRoleRepository) {
 		return (args) -> {
 			// save a couple of users
-			userRepository.save(new User("Alice", 1));
-			userRepository.save(new User("Bob", 2));
-			userRepository.save(new User("Eve", 1));
+			userRepository.save(new User("Alice",1));
+			userRepository.save(new User("Bob",2));
+			userRepository.save(new User("Eve",1));
 			unitRepository.save(new Unit("Kreftregisteret", 2));
 			unitRepository.save(new Unit("Akershus universitetssykehus HF", 1));
 			unitRepository.save(new Unit("Sørlandet sykehus HF", 2));
